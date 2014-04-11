@@ -17,5 +17,8 @@
 @property (nonatomic, strong, readonly) NSArray *themes;
 
 - (VSTheme *)themeNamed:(NSString *)themeName;
+- (VSTheme *)themeNamed:(NSString *)themeName withPrefix:(NSString *)themePrefix;
+
+
 
 @end

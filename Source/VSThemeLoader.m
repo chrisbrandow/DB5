@@ -49,6 +49,18 @@
 	return self;
 }
 
+- (VSTheme *)themeNamed:(NSString *)themeName withPrefix:(NSString *)themePrefix {
+    
+    themeName = [themePrefix stringByAppendingString:themeName];
+    
+	for (VSTheme *oneTheme in self.themes) {
+		if ([themeName isEqualToString:oneTheme.name])
+			return oneTheme;
+	}
+    
+	return nil;
+}
+
 
 - (VSTheme *)themeNamed:(NSString *)themeName {
 
