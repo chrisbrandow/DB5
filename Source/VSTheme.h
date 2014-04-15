@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import <MessageUI/MessageUI.h>
+
 
 typedef NS_ENUM(NSUInteger, VSTextCaseTransform) {
     VSTextCaseTransformNone,
@@ -18,12 +20,17 @@ typedef NS_ENUM(NSUInteger, VSTextCaseTransform) {
 
 @class VSAnimationSpecifier;
 
-@interface VSTheme : NSObject
+@interface VSTheme : NSObject <MFMailComposeViewControllerDelegate>
 
 - (id)initWithDictionary:(NSDictionary *)themeDictionary;
 
 @property (nonatomic, strong) NSString *name;
 @property (nonatomic, weak) VSTheme *parentTheme; /*can inherit*/
+
+- (void)setBool:(BOOL)objValue forKey:(NSString *)key;
+- (void)setFloat:(CGFloat)objValue forKey:(NSString *)key;
+
+- (void)sendChangesFromViewcontroller:(UIViewController *)viewController;
 
 - (BOOL)boolForKey:(NSString *)key;
 - (NSString *)stringForKey:(NSString *)key;

@@ -16,6 +16,7 @@ static UIColor *colorWithHexString(NSString *hexString);
 @interface VSTheme ()
 
 @property (nonatomic, strong) NSDictionary *themeDictionary;
+@property (nonatomic, strong) NSDictionary *themeDictionaryChanges;
 @property (nonatomic, strong) NSCache *colorCache;
 @property (nonatomic, strong) NSCache *fontCache;
 
@@ -34,6 +35,7 @@ static UIColor *colorWithHexString(NSString *hexString);
 		return nil;
 	
 	_themeDictionary = themeDictionary;
+    _themeDictionaryChanges = [[NSMutableDictionary alloc] init];
 
 	_colorCache = [NSCache new];
 	_fontCache = [NSCache new];
@@ -41,21 +43,103 @@ static UIColor *colorWithHexString(NSString *hexString);
 	return self;
 }
 
+- (void)setBool:(BOOL)objValue forKey:(NSString *)key {
+    
+    [self.themeDictionaryChanges setValue:@(objValue) forKeyPath:key];
+}
+
+- (void)setFloat:(CGFloat)objValue forKey:(NSString *)key {
+    
+    [self.themeDictionaryChanges setValue:@(objValue) forKeyPath:key];
+}
 
 - (id)objectForKey:(NSString *)key {
 
-	id obj = [self.themeDictionary valueForKeyPath:key];
-	if (obj == nil && self.parentTheme != nil)
+	id obj = ([self.themeDictionaryChanges valueForKeyPath:key])?[self.themeDictionaryChanges valueForKeyPath:key]:[self.themeDictionary valueForKeyPath:key];
+    
+	if (obj == nil && self.parentTheme != nil) {
 		obj = [self.parentTheme objectForKey:key];
+    }
 	return obj;
 }
+
+- (void)sendChangesFromViewcontroller:(UIViewController *)viewController {
+    NSLog(@"changes %@", self.themeDictionaryChanges);
+
+    id plist = [NSPropertyListSerialization dataFromPropertyList:(id)self.themeDictionaryChanges
+                                                          format:NSPropertyListXMLFormat_v1_0 errorDescription:nil];
+    NSLog(@"plist: %@", plist);
+//    NSURL *file = [[NSBundle mainBundle] URLForResource:@"changedValues" withExtension:@"plist"]; //Lets get the file location
+    
+    if ([MFMailComposeViewController canSendMail]) {
+        NSString *message = @"here are your changes";
+        // act on each specific row in order
+        
+        MFMailComposeViewController *mailer = [[MFMailComposeViewController alloc] init];
+        mailer.mailComposeDelegate = (id)self;
+
+        mailer.subject = @"changes to your theme"; //@"A Message from Clip Better App";
+        [mailer setMessageBody:message isHTML:NO];
+        [mailer addAttachmentData:plist mimeType:@"application/xml" fileName:@"theme changes"];
+
+        
+        [viewController presentViewController:mailer animated:YES completion:^{}];
+        
+    } else {
+        
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Failure"
+                                                        message:@"Your device doesn't support the composer sheet"
+                                                       delegate:nil
+                                              cancelButtonTitle:@"OK"
+                                              otherButtonTitles:nil];
+        [alert show];
+    }
+    
+}
+
+- (void)mailComposeController:(MFMailComposeViewController*)controller didFinishWithResult:(MFMailComposeResult)result error:(NSError*)error {
+    switch (result)
+    {
+        case MFMailComposeResultCancelled:
+            NSLog(@"Mail cancelled: you cancelled the operation and no email message was queued.");
+            
+            break;
+        case MFMailComposeResultSaved:
+            //            NSLog(@"Mail saved: you saved the email message in the drafts folder.");
+            break;
+        case MFMailComposeResultSent:
+            //           NSLog(@"Mail send: the email message is queued in the outbox. It is ready to send.");
+            break;
+        case MFMailComposeResultFailed:
+            //            NSLog(@"Mail failed: the email message was not saved or queued, possibly due to an error.");
+            break;
+        default:
+            //            NSLog(@"Mail not sent.");
+            break;
+    }
+    // Remove the mail view
+    
+    [controller dismissViewControllerAnimated:YES completion:^{
+        //        NSLog(@"mail dismissed");
+        
+        if (result == MFMailComposeResultSent) {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Sent" message:@"The file has been sent" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil];
+            
+            [alert show];
+        }
+        
+    } ];
+    
+}
+
 
 
 - (BOOL)boolForKey:(NSString *)key {
 
 	id obj = [self objectForKey:key];
-	if (obj == nil)
+	if (obj == nil) {
 		return NO;
+    }
 	return [obj boolValue];
 }
 
@@ -63,12 +147,15 @@ static UIColor *colorWithHexString(NSString *hexString);
 - (NSString *)stringForKey:(NSString *)key {
 	
 	id obj = [self objectForKey:key];
-	if (obj == nil)
+	if (obj == nil) {
 		return nil;
-	if ([obj isKindOfClass:[NSString class]])
+    }
+	if ([obj isKindOfClass:[NSString class]]) {
 		return obj;
-	if ([obj isKindOfClass:[NSNumber class]])
+    }
+	if ([obj isKindOfClass:[NSNumber class]]) {
 		return [obj stringValue];
+    }
 	return nil;
 }
 
@@ -76,8 +163,9 @@ static UIColor *colorWithHexString(NSString *hexString);
 - (NSInteger)integerForKey:(NSString *)key {
 
 	id obj = [self objectForKey:key];
-	if (obj == nil)
+	if (obj == nil) {
 		return 0;
+    }
 	return [obj integerValue];
 }
 
@@ -85,8 +173,9 @@ static UIColor *colorWithHexString(NSString *hexString);
 - (CGFloat)floatForKey:(NSString *)key {
 	
 	id obj = [self objectForKey:key];
-	if (obj == nil)
+	if (obj == nil) {
 		return  0.0f;
+    }
 	return [obj floatValue];
 }
 

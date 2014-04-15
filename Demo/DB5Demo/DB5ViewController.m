@@ -38,7 +38,12 @@
 	self.view.backgroundColor = [self.theme colorForKey:@"backgroundColor"];
 	self.label.textColor = [self.theme colorForKey:@"labelTextColor"];
 	self.label.font = [self.theme fontForKey:@"labelFont"];
-
+    
+    //modify an existing key
+    [self.theme setFloat:(CGFloat)1 forKey:@"labelAnimationDuration"];
+    //create an entirely new key
+    [self.theme setBool:YES forKey:@"newBoolKey"];
+    
 	[self.theme animateWithAnimationSpecifierKey:@"labelAnimation" animations:^{
 
 		CGRect rLabel = self.label.frame;
@@ -48,7 +53,20 @@
 		
 	} completion:^(BOOL finished) {
 		NSLog(@"Ran an animation.");
+        
+        if ([self.theme boolForKey:@"newBoolKey"]) {
+            NSLog(@"also set a bool programmatically");
+        }
+        
+        NSLog(@"animate duration %.1f", [self.theme floatForKey:@"labelAnimationDuration"]);
+
+        
+        [self.theme sendChangesFromViewcontroller:self];
+        
+        
+
 	}];
+    
 }
 
 

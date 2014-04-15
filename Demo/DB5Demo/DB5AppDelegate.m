@@ -24,7 +24,8 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 	
  	self.themeLoader = [VSThemeLoader new];
-    self.theme = self.themeLoader.defaultTheme;
+
+    self.theme = [self.themeLoader themeNamed:@"Default" withPrefix:@"alternate"];
 
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
  	self.viewController = [[DB5ViewController alloc] initWithNibName:@"DB5ViewController" bundle:nil theme:self.theme];
